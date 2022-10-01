@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { raw } from "body-parser";
+import bodyparser from "body-parser";
 import { exec } from "child_process";
 import { EmbedBuilder, WebhookClient } from "discord.js";
-import { webhookId, webhookToken } from "./config.json";
+import config from "./config.json" assert { type: "json" };
 
-const webhookClient = new WebhookClient({ id: webhookId, token: webhookToken });
+const webhookClient = new WebhookClient({ id: config.webhookId, token: config.webhookToken });
 
 const router = Router();
 
@@ -54,12 +54,12 @@ function process_hook(body, script) {
   }
 }
 
-router.post("/baka-rebuild", raw({ type: "application/json" }), function(req, res) {
+router.post("/baka-rebuild", bodyparser.raw({ type: "application/json" }), function(req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/baka_rebuild.sh");
 });
 
-router.post("/minerank-rebuild", raw({ type: "application/json" }), function(req, res) {
+router.post("/minerank-rebuild", bodyparser.raw({ type: "application/json" }), function(req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/minerank_rebuild.sh");
 });
