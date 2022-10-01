@@ -1,23 +1,52 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const exec = require('child_process').exec;
+import { Router } from "express";
+import { raw } from "body-parser";
+import { exec } from "child_process";
+import { EmbedBuilder, WebhookClient } from "discord.js";
+import { webhookId, webhookToken } from "./config.json";
 
-const router = express.Router();
+const webhookClient = new WebhookClient({ id: webhookId, token: webhookToken });
+
+const router = Router();
 
 function process_hook(body, script) {
- const commit_message =body.head_commit.message;
+  const commit_message = body.head_commit.message;
   const commit_author = body.head_commit.committer.name;
   const modified_files = body.head_commit.modified;
   const repo_name = body.repository.name;
   console.log(`[${repo_name}] got commit ${commit_message} from ${commit_author}, modified files: ${modified_files}`);
-  if(commit_message.startsWith("[build]")) {
+  if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
     exec(script,
         function (error, stdout, stderr) {
-          console.log('stdout: ' + stdout);
-          console.log('stderr: ' + stderr);
-          if (error !== null) {
-            console.log('exec error: ' + error);
+          console.log("stdout: " + stdout);
+          console.log("stderr: " + stderr);
+          if (error) {
+            console.log("exec error: " + error);
+
+            const embed = new EmbedBuilder()
+              .setTitle(error)
+              .setDescription(`${commit_message} modified files: ${modified_files} (${stderr})`)
+              .setColor(0xFF3333);
+
+            webhookClient.send({
+              content: "Deploy error",
+              username: "deploy-bot",
+              avatarURL: "https://i.imgur.com/IjBUMir.png",
+              embeds: [embed],
+            });
+          } else {
+
+            const embed = new EmbedBuilder()
+              .setTitle("Success")
+              .setDescription(`${commit_message} modified files: ${modified_files} (${stderr})`)
+              .setColor(0x88FF88);
+
+            webhookClient.send({
+              content: "Sucessfully deployed",
+              username: "deploy-bot",
+              avatarURL: "https://i.imgur.com/IjBUMir.png",
+              embeds: [embed],
+            });
           }
     });
   } else {
@@ -25,14 +54,14 @@ function process_hook(body, script) {
   }
 }
 
-router.post("/baka-rebuild", bodyParser.raw({type: 'application/json'}), function(req, res) {
+router.post("/baka-rebuild", raw({ type: "application/json" }), function(req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/baka_rebuild.sh");
 });
 
-router.post("/minerank-rebuild", bodyParser.raw({type: 'application/json'}), function(req, res) {
+router.post("/minerank-rebuild", raw({ type: "application/json" }), function(req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/minerank_rebuild.sh");
 });
 
-module.exports = router;
+export default router;
