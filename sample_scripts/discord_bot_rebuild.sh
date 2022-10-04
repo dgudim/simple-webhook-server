@@ -18,7 +18,7 @@ start_bot () {
 }
 
 echo backing up current version
-cp $BOT_ROOT ${BOT_ROOT}_old
+cp -r $BOT_ROOT ${BOT_ROOT}_old
 cd $BOT_ROOT
 
 echo Pulling latest version
@@ -42,10 +42,11 @@ if [[ -f $ERR_FLAG ]]; then
     echo Error, rolling back
     stop_bot
     rm -r $BOT_ROOT
-    mv ${BOT_ROOT}_old $BOT_ROOT
+    mv -r ${BOT_ROOT}_old $BOT_ROOT
     start_bot
     exit 1
 else
+    rm -r ${BOT_ROOT}_old
     echo Done
 fi
 
