@@ -16,27 +16,11 @@ function process_hook(body, script) {
   console.log(`[${repo_name}] got commit ${commit_message} from ${commit_author}, modified files: ${modified_files}`);
   if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
-    exec(script,
-      function (error, stdout, stderr) {
-        console.log("stdout: " + stdout);
-        console.log("stderr: " + stderr);
-        if (error) {
-          console.log("exec error: " + error);
-
-          const embed = new EmbedBuilder()
-            .setTitle(error)
-            .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
-            .setColor(0xFF3333);
-
-          webhookClient.send({
-            content: "Deploy error",
-            username: "deploy-bot",
-            avatarURL: "https://i.imgur.com/IjBUMir.png",
-            embeds: [embed],
-          });
-
-        } else {
-
+    try {
+      exec(script,
+        function (stdout, stderr) {
+          console.log("stdout: " + stdout);
+          console.log("stderr: " + stderr);
           const embed = new EmbedBuilder()
             .setTitle("Success")
             .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
@@ -48,9 +32,22 @@ function process_hook(body, script) {
             avatarURL: "https://i.imgur.com/IjBUMir.png",
             embeds: [embed],
           });
+        });
+    } catch (error) {
+      console.log("exec error: " + error);
 
-        }
+      const embed = new EmbedBuilder()
+        .setTitle(error)
+        .setDescription(`${commit_message} \n modified files: ${modified_files}`)
+        .setColor(0xFF3333);
+
+      webhookClient.send({
+        content: "Deploy error",
+        username: "deploy-bot",
+        avatarURL: "https://i.imgur.com/IjBUMir.png",
+        embeds: [embed],
       });
+    }
   } else {
     console.log("Skipping rebuild");
   }
