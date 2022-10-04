@@ -64,6 +64,22 @@ function process_hook(body, script) {
             avatarURL: "https://i.imgur.com/IjBUMir.png",
             embeds: [embed],
           });
+
+          if (config.ntfyEndpoint) {
+            try {
+              fetch(`https://ntfy.sh/${config.ntfyEndpoint}`, {
+                method: "POST", // PUT works too
+                body: `${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`,
+                headers: {
+                  "Title": "Bot deploy success!",
+                  "Priority": "normal"
+                }
+              });
+            } catch (e) {
+              console.error(e);
+            }
+          }
+
         }
       });
   } else {
