@@ -34,11 +34,11 @@ function process_hook(body, script) {
           });
         });
     } catch (error) {
-      console.log("exec error: " + error);
+      console.log(`exec error: stdout: ${error.stdout} \n  ${error.stderr}`);
 
       const embed = new EmbedBuilder()
         .setTitle(`Error (exit code ${error.status})`)
-        .setDescription(`${commit_message} \n modified files: ${modified_files}`)
+        .setDescription(`${commit_message} \n modified files: ${modified_files} (${error.stderr.trim()})`)
         .setColor(0xFF3333);
 
       webhookClient.send({
