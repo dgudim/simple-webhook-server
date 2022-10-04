@@ -1,6 +1,6 @@
 import { Router } from "express";
 import bodyparser from "body-parser";
-import { exec } from "child_process";
+import { execSync } from "child_process";
 import { EmbedBuilder, WebhookClient } from "discord.js";
 import config from "./config.json" assert { type: "json" };
 
@@ -17,7 +17,7 @@ function process_hook(body, script) {
   if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
     try {
-      exec(script,
+      execSync(script,
         function (stdout, stderr) {
           console.log("stdout: " + stdout);
           console.log("stderr: " + stderr);
