@@ -5,9 +5,9 @@ fi
 
 cd $1
 if [[ -z $2 ]]; then
-    ERR_FLAG=$2
+    ERR_FLAG=/tmp/$(echo $RANDOM | md5sum | head -c 32);
 else
-    ERR_FLAG=$(echo $RANDOM | md5sum | head -c 32);
+    ERR_FLAG=$2
 fi
 
 keepalive.sh ts-node index.ts $ERR_FLAG

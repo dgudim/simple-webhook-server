@@ -7,7 +7,13 @@ SCREEN_NAME=$1
 STARTUP_SCRIPT=/scripts/discord_bot_startup.sh
 BOT_ROOT=$2
 RUNUSER=kloud
-ERR_FLAG=$(echo $RANDOM | md5sum | head -c 32);
+ERR_FLAG=/tmp/$(echo $RANDOM | md5sum | head -c 32);
+
+echo SCREEN_NAME is: $SCREEN_NAME
+echo STARTUP_SCRIPT is: $STARTUP_SCRIPT
+echo BOT_ROOT is: $BOT_ROOT
+echo RUNUSER is: $RUNUSER
+echo ERR_FLAG is: $ERR_FLAG
 
 stop_bot () {
   screen -X -S $SCREEN_NAME quit
@@ -39,10 +45,10 @@ sleep 10
 
 if [[ -f $ERR_FLAG ]]; then
     rm $ERR_FLAG
-    echo Error, rolling back
+    echo An error ocurred, rolling back
     stop_bot
     rm -r $BOT_ROOT
-    mv -r ${BOT_ROOT}_old $BOT_ROOT
+    mv ${BOT_ROOT}_old $BOT_ROOT
     start_bot
     exit 1
 else
