@@ -35,22 +35,6 @@ function process_hook(body, script) {
             embeds: [embed],
           });
 
-          if (config.ntfyEndpoint) {
-            try {
-              fetch(`https://ntfy.sh/${config.ntfyEndpoint}`, {
-                method: "POST", // PUT works too
-                body: error,
-                headers: {
-                  "Title": "Bot deploy error",
-                  "Priority": "urgent",
-                  "Tags": "warning"
-                }
-              });
-            } catch (e) {
-              console.error(e);
-            }
-          }
-          
         } else {
 
           const embed = new EmbedBuilder()
@@ -65,21 +49,6 @@ function process_hook(body, script) {
             embeds: [embed],
           });
 
-          if (config.ntfyEndpoint) {
-            try {
-              fetch(`https://ntfy.sh/${config.ntfyEndpoint}`, {
-                method: "POST", // PUT works too
-                body: `${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`,
-                headers: {
-                  "Title": "Bot deploy success!",
-                  "Priority": "normal"
-                }
-              });
-            } catch (e) {
-              console.error(e);
-            }
-          }
-
         }
       });
   } else {
@@ -89,12 +58,12 @@ function process_hook(body, script) {
 
 router.post("/baka-rebuild", bodyparser.raw({ type: "application/json" }), function (req, res) {
   res.send("Baka rebuild Successfully received");
-  process_hook(req.body, "/scripts/baka_rebuild.sh");
+  process_hook(req.body, "/scripts/discord_bot_rebuild.sh BAKA_BOT /bots/Discord_baka_bot");
 });
 
 router.post("/minerank-rebuild", bodyparser.raw({ type: "application/json" }), function (req, res) {
-  res.send("Baka rebuild Successfully received");
-  process_hook(req.body, "/scripts/minerank_rebuild.sh");
+  res.send("Minerank rebuild Successfully received");
+  process_hook(req.body, "/scripts/discord_bot_rebuild.sh RANK_BOT /bots/Discord_rank_bot");
 });
 
 export default router;
