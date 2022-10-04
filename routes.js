@@ -17,49 +17,66 @@ function process_hook(body, script) {
   if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
     exec(script,
-        function (error, stdout, stderr) {
-          console.log("stdout: " + stdout);
-          console.log("stderr: " + stderr);
-          if (error) {
-            console.log("exec error: " + error);
+      function (error, stdout, stderr) {
+        console.log("stdout: " + stdout);
+        console.log("stderr: " + stderr);
+        if (error) {
+          console.log("exec error: " + error);
 
-            const embed = new EmbedBuilder()
-              .setTitle(error)
-              .setDescription(`${commit_message} modified files: ${modified_files} (${stderr})`)
-              .setColor(0xFF3333);
+          const embed = new EmbedBuilder()
+            .setTitle(error)
+            .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
+            .setColor(0xFF3333);
 
-            webhookClient.send({
-              content: "Deploy error",
-              username: "deploy-bot",
-              avatarURL: "https://i.imgur.com/IjBUMir.png",
-              embeds: [embed],
-            });
-          } else {
+          webhookClient.send({
+            content: "Deploy error",
+            username: "deploy-bot",
+            avatarURL: "https://i.imgur.com/IjBUMir.png",
+            embeds: [embed],
+          });
 
-            const embed = new EmbedBuilder()
-              .setTitle("Success")
-              .setDescription(`${commit_message} modified files: ${modified_files} (${stderr})`)
-              .setColor(0x88FF88);
-
-            webhookClient.send({
-              content: "Sucessfully deployed",
-              username: "deploy-bot",
-              avatarURL: "https://i.imgur.com/IjBUMir.png",
-              embeds: [embed],
-            });
+          if (config.ntfyEndpoint) {
+            try {
+              fetch(`https://ntfy.sh/${config.ntfyEndpoint}`, {
+                method: "POST", // PUT works too
+                body: error,
+                headers: {
+                  "Title": "Bot deploy error",
+                  "Priority": "urgent",
+                  "Tags": "warning"
+                }
+              });
+            } catch (e) {
+              console.error(e);
+            }
           }
-    });
+          
+        } else {
+
+          const embed = new EmbedBuilder()
+            .setTitle("Success")
+            .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
+            .setColor(0x88FF88);
+
+          webhookClient.send({
+            content: "Sucessfully deployed",
+            username: "deploy-bot",
+            avatarURL: "https://i.imgur.com/IjBUMir.png",
+            embeds: [embed],
+          });
+        }
+      });
   } else {
     console.log("Skipping rebuild");
   }
 }
 
-router.post("/baka-rebuild", bodyparser.raw({ type: "application/json" }), function(req, res) {
+router.post("/baka-rebuild", bodyparser.raw({ type: "application/json" }), function (req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/baka_rebuild.sh");
 });
 
-router.post("/minerank-rebuild", bodyparser.raw({ type: "application/json" }), function(req, res) {
+router.post("/minerank-rebuild", bodyparser.raw({ type: "application/json" }), function (req, res) {
   res.send("Baka rebuild Successfully received");
   process_hook(req.body, "/scripts/minerank_rebuild.sh");
 });
