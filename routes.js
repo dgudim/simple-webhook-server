@@ -37,7 +37,7 @@ function process_hook(body, script) {
       console.log("exec error: " + error);
 
       const embed = new EmbedBuilder()
-        .setTitle(error)
+        .setTitle(`Error (exit code ${error.status})`)
         .setDescription(`${commit_message} \n modified files: ${modified_files}`)
         .setColor(0xFF3333);
 
