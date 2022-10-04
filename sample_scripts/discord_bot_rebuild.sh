@@ -24,7 +24,7 @@ start_bot () {
 }
 
 echo backing up current version
-cp -r $BOT_ROOT ${BOT_ROOT}_old
+runuser -u $RUNUSER -- cp -r $BOT_ROOT ${BOT_ROOT}_old
 cd $BOT_ROOT
 
 echo Pulling latest version
@@ -49,6 +49,7 @@ if [[ -f $ERR_FLAG ]]; then
     stop_bot
     rm -r $BOT_ROOT
     mv ${BOT_ROOT}_old $BOT_ROOT
+    chown -R $RUNUSER $BOT_ROOT
     start_bot
     exit 1
 else
