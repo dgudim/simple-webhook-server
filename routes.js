@@ -1,6 +1,10 @@
 import { Router } from "express";
 import bodyparser from "body-parser";
-import { execSync } from "child_process";
+
+import { exec } from "child_process";
+import util from "util";
+const execPromise = util.promisify(exec);
+
 import { EmbedBuilder, WebhookClient } from "discord.js";
 import config from "./config.json" assert { type: "json" };
 
@@ -8,7 +12,7 @@ const webhookClient = new WebhookClient({ id: config.webhookId, token: config.we
 
 const router = Router();
 
-function process_hook(body, script) {
+async function process_hook(body, script) {
   const commit_message = body.head_commit.message;
   const commit_author = body.head_commit.committer.name;
   const modified_files = body.head_commit.modified;
@@ -17,27 +21,28 @@ function process_hook(body, script) {
   if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
     try {
-      execSync(script,
-        function (stdout, stderr) {
-          console.log("stdout: " + stdout);
-          console.log("stderr: " + stderr);
-          const embed = new EmbedBuilder()
-            .setTitle("Success")
-            .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
-            .setColor(0x88FF88);
+      const { stdout, stderr } = await execPromise(script);
 
-          webhookClient.send({
-            content: "Sucessfully deployed",
-            username: "deploy-bot",
-            avatarURL: "https://i.imgur.com/IjBUMir.png",
-            embeds: [embed],
-          });
-        });
+      console.log(`stdout: ${stdout}`);
+      console.log(`stderr: ${stderr}`);
+      
+      const embed = new EmbedBuilder()
+        .setTitle("Success")
+        .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
+        .setColor(0x88FF88);
+
+      webhookClient.send({
+        content: "Sucessfully deployed",
+        username: "deploy-bot",
+        avatarURL: "https://i.imgur.com/IjBUMir.png",
+        embeds: [embed],
+      });
+
     } catch (error) {
       console.log(`exec error: stdout: ${error.stdout} \n  ${error.stderr}`);
 
       const embed = new EmbedBuilder()
-        .setTitle(`Error (exit code ${error.status})`)
+        .setTitle(`Error deploying`)
         .setDescription(`${commit_message} \n modified files: ${modified_files} (${error.stderr.trim()})`)
         .setColor(0xFF3333);
 
