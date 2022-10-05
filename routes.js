@@ -17,18 +17,27 @@ async function process_hook(body, script) {
   const commit_author = body.head_commit.committer.name;
   const modified_files = body.head_commit.modified;
   const repo_name = body.repository.name;
+  const author_avatar_url = body.repository.owner.avatar_url;
+  const commit_url = body.head_commit.url;
+
   console.log(`[${repo_name}] got commit ${commit_message} from ${commit_author}, modified files: ${modified_files}`);
   if (commit_message.startsWith("[build]")) {
     console.log("Triggering rebuild");
+
+    const embed = new EmbedBuilder()
+      .setAuthor(commit_author)
+      .setURL(commit_url)
+      .setThumbnail(author_avatar_url);
+
     try {
       const { stdout, stderr } = await execPromise(script);
 
       console.log(`stdout: ${stdout}`);
       console.log(`stderr: ${stderr}`);
-      
-      const embed = new EmbedBuilder()
+
+      embed
         .setTitle("Success")
-        .setDescription(`${commit_message} \n modified files: ${modified_files} (${stderr.trim()})`)
+        .setDescription(`${commit_message} \n modified files: ${modified_files}`)
         .setColor(0x88FF88);
 
       webhookClient.send({
@@ -41,7 +50,7 @@ async function process_hook(body, script) {
     } catch (error) {
       console.log(`exec error: stdout: ${error.stdout} \n  ${error.stderr}`);
 
-      const embed = new EmbedBuilder()
+      embed
         .setTitle(`Error deploying`)
         .setDescription(`${commit_message} \n modified files: ${modified_files} (${error.stderr.trim()})`)
         .setColor(0xFF3333);
