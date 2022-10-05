@@ -17,7 +17,8 @@ async function process_hook(body, script) {
   const commit_author = body.head_commit.committer.name;
   const modified_files = body.head_commit.modified;
   const repo_name = body.repository.name;
-  const author_avatar_url = body.repository.owner.avatar_url;
+  const author_avatar_url = body.sender.avatar_url;
+  const author_url = body.sender.html_url;
   const commit_url = body.head_commit.url;
 
   console.log(`[${repo_name}] got commit ${commit_message} from ${commit_author}, modified files: ${modified_files}`);
@@ -25,9 +26,8 @@ async function process_hook(body, script) {
     console.log("Triggering rebuild");
 
     const embed = new EmbedBuilder()
-      .setAuthor(commit_author)
-      .setURL(commit_url)
-      .setThumbnail(author_avatar_url);
+      .setAuthor({ name: commit_author, iconURL: author_avatar_url, url: author_url })
+      .setURL(commit_url);
 
     try {
       const { stdout, stderr } = await execPromise(script);
